@@ -32,8 +32,6 @@ jobs:
           RACIONAL_AMZN_SHARES: ${{ secrets.RACIONAL_AMZN_SHARES }}
           RACIONAL_MSFT_SHARES: ${{ secrets.RACIONAL_MSFT_SHARES }}
           BINANCE_BTC_AMOUNT: ${{ secrets.BINANCE_BTC_AMOUNT }}
-          BINANCE_API_KEY: ${{ secrets.BINANCE_API_KEY }}
-          BINANCE_API_SECRET: ${{ secrets.BINANCE_API_SECRET }}
 
       - name: Commit updated CSV
         run: |

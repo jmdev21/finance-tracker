@@ -1,66 +1,30 @@
-from collectors.binance.binance_auth import get_binance_client
+import os
+import yfinance as yf
 from utils.numbers import truncate
+from utils.fx import usd_to_clp
 
-
-def get_funding_balances():
+def get_bitcoin_total_clp() -> float:
     """
-    Obtiene balances del Funding Wallet (Fondos).
-    Retorna solo assets con amount > 0.
+    Calcula el valor total de tu BTC en CLP usando Yahoo Finance y la cantidad guardada en secrets.
     """
-    client = get_binance_client()
-    funds = client.funding_wallet()
+    # Tomamos la cantidad desde el secreto
+    btc_amount = float(os.getenv("BINANCE_BTC_AMOUNT", 0))
+    if btc_amount <= 0:
+        raise Exception("BINANCE_BTC_AMOUNT no definido o es 0")
 
-    #print(f"📦 FUNDING WALLET recibido: {len(funds)} assets")
+    # Obtenemos precio actual de BTC en USD
+    btc = yf.Ticker("BTC-USD")
+    data = btc.history(period="1d")
+    if data.empty:
+        raise Exception("No se pudo obtener el precio de Bitcoin desde Yahoo Finance")
+    
+    btc_price_usd = float(data['Close'].iloc[-1])
 
-    balances = []
+    # Calculamos total en USD
+    total_usd = btc_amount * btc_price_usd
 
-    for f in funds:
-        amount = float(f.get("free", 0))
+    # Convertimos a CLP
+    total_clp = usd_to_clp(total_usd)
 
-        if amount > 0:
-            balances.append({
-                "asset": f["asset"],
-                "amount": amount
-            })
+    return truncate(total_clp)
 
-    #print(f"✅ Assets con balance > 0: {balances}")
-    return balances
-
-
-def get_funding_total_usdt() -> float:
-    """
-    Convierte el Funding Wallet completo a USDT.
-    Ignora activos sin par USDT.
-    """
-    client = get_binance_client()
-    balances = get_funding_balances()
-
-    prices = {
-        p["symbol"]: float(p["price"])
-        for p in client.get_all_tickers()
-    }
-
-    #print(f"\n📈 Tickers disponibles: {len(prices)}")
-
-    total = 0.0
-
-    for b in balances:
-        asset = b["asset"]
-        amount = b["amount"]
-
-        if asset == "USDT":
-            total += amount
-            print(f"USDT: {amount}")
-            continue
-
-        symbol = f"{asset}USDT"
-        price = prices.get(symbol)
-
-        if price:
-            value = amount * price
-            total += value
-            #(f"{asset}: {amount} x {price} = {value:.4f} USDT")
-        else:
-            print(f"⚠️ {asset} sin par USDT → ignorado")
-
-    return truncate(total)

@@ -6,7 +6,7 @@ from datetime import datetime
 
 from collectors.fintual.fintual_goals import get_fintual_total
 from collectors.racional.racional_valuation import get_racional_total
-from collectors.binance.binance_funding import get_funding_total_usdt
+from collectors.binance.binance_funding import get_bitcoin_total_clp
 from utils.fx import usd_to_clp
 
 
@@ -54,12 +54,10 @@ def fetch_all_sources():
         if total_racional is None:
             raise ValueError("Racional retornó None")
 
-        logging.info("Obteniendo datos de Binance...")
-        total_binance_usdt = get_funding_total_usdt()
-        if total_binance_usdt is None:
+        logging.info("Obteniendo valor de Bitcoin desde Yahoo...")
+        total_binance_clp = get_bitcoin_total_clp()
+        if total_binance_clp is None:
             raise ValueError("Binance retornó None")
-
-        total_binance_clp = usd_to_clp(total_binance_usdt)
 
         logging.info("Todas las fuentes respondieron correctamente.")
 
