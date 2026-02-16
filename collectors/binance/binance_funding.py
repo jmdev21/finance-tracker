@@ -3,7 +3,7 @@ import yfinance as yf
 from utils.numbers import truncate
 from utils.fx import usd_to_clp
 
-def get_bitcoin_total_clp() -> float:
+def get_bitcoin_total_clp() -> int:
     """
     Calcula el valor total de tu BTC en CLP usando Yahoo Finance y la cantidad guardada en secrets.
     """
@@ -26,5 +26,5 @@ def get_bitcoin_total_clp() -> float:
     # Convertimos a CLP
     total_clp = usd_to_clp(total_usd)
 
-    return truncate(total_clp)
+    return int(truncate(total_clp))
 
