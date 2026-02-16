@@ -1,0 +1,35 @@
+name: Daily Portfolio Snapshot
+
+on:
+  schedule:
+    - cron: '0 14:15 * * *'   # 12:00 UTC
+  workflow_dispatch:
+
+jobs:
+  run-script:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Run snapshot script
+        run: |
+          python save_snapshot.py
+
+      - name: Commit updated CSV
+        run: |
+          git config --global user.name 'github-actions'
+          git config --global user.email 'actions@github.com'
+          git add database/historical_data.csv
+          git commit -m "📊 Daily snapshot" || echo "No changes"
+          git push
