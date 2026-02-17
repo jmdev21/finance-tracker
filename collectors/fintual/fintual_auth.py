@@ -11,7 +11,7 @@ def get_fintual_token() -> str:
     password = os.getenv("FINTUAL_PASSWORD")
 
     if not email or not password:
-        raise Exception("Credenciales de Fintual no encontradas en .env")
+        raise Exception("Credenciales de Fintual no encontradas")
 
     payload = {
         "user": {

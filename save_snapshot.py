@@ -1,16 +1,13 @@
-import csv
 import os
 import sys
 import logging
 from datetime import datetime
 
+from supabase import create_client
+
 from collectors.fintual.fintual_goals import get_fintual_total
 from collectors.racional.racional_valuation import get_racional_total
 from collectors.binance.binance_funding import get_bitcoin_total_clp
-from utils.fx import usd_to_clp
-
-
-CSV_PATH = "database/historical_data.csv"
 
 # -------------------------------------------------
 # Configuración logging
@@ -20,24 +17,36 @@ logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(message)s"
 )
 
+# -------------------------------------------------
+# Configuración Supabase
+# -------------------------------------------------
+SUPABASE_URL = os.environ.get("SUPABASE_URL")
+SUPABASE_SERVICE_ROLE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
+
+if not SUPABASE_URL or not SUPABASE_SERVICE_ROLE_KEY:
+    logging.error("❌ Faltan variables de entorno de Supabase.")
+    sys.exit(1)
+
+supabase = create_client(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
 
 # -------------------------------------------------
-# Validación snapshot existente
+# Validación snapshot existente (en Supabase)
 # -------------------------------------------------
 def snapshot_exists_today():
     today = datetime.now().strftime("%Y-%m-%d")
 
-    if not os.path.exists(CSV_PATH):
-        return False
+    try:
+        response = supabase.table("historical_data") \
+            .select("date") \
+            .eq("date", today) \
+            .execute()
 
-    with open(CSV_PATH, "r") as f:
-        reader = csv.DictReader(f)
-        for row in reader:
-            if row["date"] == today:
-                return True
+        return len(response.data) > 0
 
-    return False
-
+    except Exception as e:
+        logging.error("❌ Error verificando snapshot existente:")
+        logging.exception(e)
+        sys.exit(1)
 
 # -------------------------------------------------
 # Obtener datos con validación fuerte
@@ -66,11 +75,10 @@ def fetch_all_sources():
     except Exception as e:
         logging.error("❌ Error obteniendo datos:")
         logging.exception(e)
-        sys.exit(1)  # Termina el script con error
-
+        sys.exit(1)
 
 # -------------------------------------------------
-# Guardar snapshot
+# Guardar snapshot en Supabase
 # -------------------------------------------------
 def save_snapshot():
     today = datetime.now().strftime("%Y-%m-%d")
@@ -83,24 +91,22 @@ def save_snapshot():
         total_binance_clp
     )
 
-    file_exists = os.path.isfile(CSV_PATH)
+    data = {
+        "date": today,
+        "fintual": total_fintual,
+        "racional": total_racional,
+        "binance": total_binance_clp,
+        "total": total_patrimonio
+    }
 
-    with open(CSV_PATH, "a", newline="") as f:
-        writer = csv.writer(f)
+    try:
+        supabase.table("historical_data").insert(data).execute()
+        logging.info("✅ Snapshot guardado correctamente en Supabase.")
 
-        if not file_exists:
-            writer.writerow(["date", "fintual", "racional", "binance", "total"])
-
-        writer.writerow([
-            today,
-            total_fintual,
-            total_racional,
-            total_binance_clp,
-            total_patrimonio
-        ])
-
-    logging.info("✅ Snapshot guardado correctamente.")
-
+    except Exception as e:
+        logging.error("❌ Error insertando snapshot:")
+        logging.exception(e)
+        sys.exit(1)
 
 # -------------------------------------------------
 # Main
