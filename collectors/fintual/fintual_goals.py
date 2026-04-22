@@ -40,9 +40,14 @@ def _obtener_valor_cuota(asset_id: int) -> float:
 
 
 def get_fintual_goals() -> int:
-    total = sum(
-        fondo["cuotas"] * _obtener_valor_cuota(fondo["id"])
-        for fondo in FONDOS
-    )
-    return int(total)
+    cuotas_risky       = float(os.getenv("CUOTAS_RISKY_NORRIS", 0))
+    cuotas_conservative = float(os.getenv("CUOTAS_CONSERVATIVE_STREEP", 0))
+ 
+    valor_risky       = _obtener_valor_cuota(186)
+    valor_conservative = _obtener_valor_cuota(15077)
+ 
+    total_risky       = cuotas_risky * valor_risky
+    total_conservative = cuotas_conservative * valor_conservative
+ 
+    return int(total_risky + total_conservative)
 
