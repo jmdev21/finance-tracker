@@ -5,7 +5,7 @@ from datetime import datetime
 
 from supabase import create_client
 
-from collectors.fintual.fintual_goals import get_fintual_total
+from collectors.fintual.fintual_goals import get_fintual_goals
 from collectors.racional.racional_valuation import get_racional_total
 from collectors.binance.binance_funding import get_bitcoin_total_clp
 
@@ -54,7 +54,7 @@ def snapshot_exists_today():
 def fetch_all_sources():
     try:
         logging.info("Obteniendo datos de Fintual...")
-        total_fintual = get_fintual_total()
+        total_fintual = get_fintual_goals()
         if total_fintual is None:
             raise ValueError("Fintual retornó None")
 

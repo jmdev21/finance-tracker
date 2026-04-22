@@ -1,49 +1,48 @@
-import os
 import requests
+from datetime import date, timedelta
 from dotenv import load_dotenv
-
-from collectors.fintual.fintual_auth import get_fintual_token
+import os
 
 load_dotenv()
 
-FINTUAL_BASE_URL = "https://fintual.cl/api"
+FONDOS = [
+    {
+        "nombre": "Risky Norris",
+        "id":     186,
+        "cuotas": float(os.getenv("CUOTAS_RISKY_NORRIS", 0)),
+    },
+    {
+        "nombre": "Very Conservative Streep",
+        "id":     15077,
+        "cuotas": float(os.getenv("CUOTAS_CONSERVATIVE_STREEP", 0)),
+    },
+]
 
-def get_fintual_goals():
-    token = get_fintual_token()
-    email = os.getenv("FINTUAL_EMAIL")
 
-    if not email:
-        raise Exception("FINTUAL_EMAIL no está definido en el .env")
+def _obtener_valor_cuota(asset_id: int) -> float:
+    hoy   = date.today()
+    desde = hoy - timedelta(days=7)
 
-    params = {
-        "user_email": email,
-        "user_token": token
-    }
-
-    response = requests.get(
-        f"{FINTUAL_BASE_URL}/goals",
-        params=params,
-        timeout=10
+    r = requests.get(
+        f"https://fintual.cl/api/real_assets/{asset_id}/days",
+        params={"from_date": desde.isoformat(), "to_date": hoy.isoformat()},
+        timeout=15
     )
 
-    response.raise_for_status()
+    if r.status_code != 200:
+        raise Exception(f"Error en API ({asset_id}): {r.status_code} - {r.text[:200]}")
 
-    return response.json()["data"]
+    datos = r.json().get("data", [])
+    if not datos:
+        raise Exception(f"Sin datos recientes para fondo {asset_id}.")
 
-def get_fintual_total() -> int:
-    goals = get_fintual_goals()
+    return float(datos[-1]["attributes"].get("price", 0))
 
-    total = 0
 
-    for goal in goals:
-        attrs = goal.get("attributes", {})
-        nav = attrs.get("nav")
-
-        if nav is None:
-            continue
-
-        total += int(nav)
-
-    return total
-
+def get_fintual_goals() -> int:
+    total = sum(
+        fondo["cuotas"] * _obtener_valor_cuota(fondo["id"])
+        for fondo in FONDOS
+    )
+    return int(total)
 

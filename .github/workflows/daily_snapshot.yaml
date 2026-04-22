@@ -1,6 +1,8 @@
 name: Daily Portfolio Snapshot
 
 on:
+  schedule:
+    - cron: '30 21 * * *' 
   workflow_dispatch:
 
 jobs:
@@ -23,8 +25,8 @@ jobs:
       - name: Run snapshot script
         run: python save_snapshot.py
         env:
-          FINTUAL_EMAIL: ${{ secrets.FINTUAL_EMAIL }}
-          FINTUAL_PASSWORD: ${{ secrets.FINTUAL_PASSWORD }}
+          CUOTAS_RISKY_NORRISL: ${{ secrets.CUOTAS_RISKY_NORRIS }}
+          CUOTAS_CONSERVATIVE_STREEP: ${{ secrets.CUOTAS_CONSERVATIVE_STREEP }}
           RACIONAL_LTM_SHARES: ${{ secrets.RACIONAL_LTM_SHARES }}
           RACIONAL_META_SHARES: ${{ secrets.RACIONAL_META_SHARES }}
           RACIONAL_AMZN_SHARES: ${{ secrets.RACIONAL_AMZN_SHARES }}
