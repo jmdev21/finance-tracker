@@ -7,7 +7,7 @@ def get_usd_clp_rate() -> float:
     Obtiene el tipo de cambio USD → CLP usando Yahoo Finance.
     """
     usdclp = yf.Ticker("USDCLP=X")
-    hist = usdclp.history(period="1d")
+    hist = usdclp.history(period="5d")
 
     if hist.empty:
         raise ValueError("No se pudo obtener el tipo de cambio USD/CLP")
