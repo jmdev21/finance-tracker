@@ -61,8 +61,8 @@ def get_racional_valuation():
     # NUEVO: convertir dólares de wallet a CLP
     usd_wallet_value = usd_to_clp(usd_balance)
 
-    print(f"{ltm_value} ,  {meta_value}  , {amzn_value} ,  {msft_value},  {usd_wallet_value}")
-    
+    print(f"Valor dolares: {usd_wallet_value}")
+
     total = ltm_value + meta_value + amzn_value + msft_value + usd_wallet_value
 
     return {
