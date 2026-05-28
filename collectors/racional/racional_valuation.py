@@ -39,6 +39,7 @@ def get_racional_valuation():
 
     # NUEVO: saldo USD en wallet
     usd_balance = float(os.getenv("RACIONAL_USD_BALANCE", 0))
+    print("RAW USD:", repr(usd_balance))
 
     # Precios actuales
     ltm_price = get_price_yahoo_web("LTM.SN")
