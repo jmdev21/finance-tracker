@@ -37,6 +37,9 @@ def get_racional_valuation():
     amzn_shares = float(os.getenv("RACIONAL_AMZN_SHARES", 0))
     msft_shares = float(os.getenv("RACIONAL_MSFT_SHARES", 0))
 
+    # NUEVO: saldo USD en wallet
+    usd_balance = float(os.getenv("RACIONAL_USD_BALANCE", 0))
+
     # Precios actuales
     ltm_price = get_price_yahoo_web("LTM.SN")
     meta_price = get_price("META")
@@ -55,9 +58,12 @@ def get_racional_valuation():
     msft_value = msft_shares * msft_price
     msft_value = usd_to_clp(msft_value)
 
+    # NUEVO: convertir dólares de wallet a CLP
+    usd_wallet_value = usd_to_clp(usd_balance)
+
     #print(f"{ltm_value} ,  {meta_value}  , {amzn_value} ,  {msft_value}")
 
-    total = ltm_value + meta_value + amzn_value + msft_value
+    total = ltm_value + meta_value + amzn_value + msft_value + usd_wallet_value
 
     return {
         "total": total
